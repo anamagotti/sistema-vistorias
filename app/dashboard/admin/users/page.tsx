@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
 
   // Buscar todos os usuários
   const { data: users, error } = await supabase
-    .from("profiles")
+    .from("users")
     .select("*, franchises(name)")
     .order("created_at", { ascending: false })
 

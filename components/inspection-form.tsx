@@ -362,6 +362,10 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                               response.photoUrl ? "text-green-600 bg-green-50" : "text-slate-500"
                             }`}
                             title={response.photoUrl ? "Foto anexada (clique para alterar)" : "Anexar foto"}
+                            onClick={(e) => {
+                              // Evitar que o clique no label propague e cause submissão acidental
+                              e.stopPropagation()
+                            }}
                           >
                             {uploadingPhoto === key ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
