@@ -16,7 +16,7 @@ export const CHECKLIST_ATENDIMENTO: ChecklistSection[] = [
     title: "TAREFA / DIA",
     items: [
       { category: "Mesas Limpas", item: "Mesas Limpas", points: 5 },
-      { category: "Mesas Limpas", item: "Palheiro, saleiro e papeleiro nas mesas", points: 5 },
+      { category: "Mesas Limpas", item: "Paliteiros, saleiro e papeleiro nas mesas", points: 5 },
       { category: "Mesas Limpas", item: "Organização das mesas e cadeiras", points: 5 },
       { category: "Mesas Limpas", item: "Chão Limpo", points: 2 },
       { category: "Mesas Limpas", item: "Paredes Limpas", points: 3 },
