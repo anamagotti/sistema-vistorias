@@ -275,11 +275,19 @@ export async function POST(request: Request) {
                       <span class="status-badge status-${item.status.toLowerCase()}">${item.status}</span>
                     </div>
                     ${
-                      item.observation || item.responsible
+                      item.observation || item.responsible || item.photo_url
                         ? `
                       <div class="item-details">
                         ${item.observation ? `<div><strong>Observação:</strong> ${item.observation}</div>` : ""}
                         ${item.responsible ? `<div style="margin-top: 5px;"><strong>Responsável:</strong> ${item.responsible}</div>` : ""}
+                        ${
+                          item.photo_url
+                            ? `<div style="margin-top: 10px;">
+                                <strong>Foto:</strong><br/>
+                                <img src="${item.photo_url}" style="max-width: 200px; max-height: 200px; margin-top: 5px; border-radius: 4px; border: 1px solid #ddd;" />
+                               </div>`
+                            : ""
+                        }
                       </div>
                     `
                         : ""
