@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { SECTORS, calculateRating } from "@/lib/checklist-data"
 import type { Franchise } from "@/types/inspection"
-import { ArrowLeft, Save, Camera, Loader2, Image as ImageIcon } from "lucide-react"
+import { ArrowLeft, Save, Camera, Loader2, Image as ImageIcon, X } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
@@ -29,7 +29,7 @@ type ItemResponse = {
   status: "OK" | "NO"
   observation: string
   responsible: string
-  photoUrl: string
+  photos: string[]
 }
 
 export default function InspectionForm({ userId, franchises, users, defaultFranchiseId }: Props) {
@@ -65,7 +65,23 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
         .from('inspection-photos')
         .getPublicUrl(filePath)
 
-      handleItemChange(itemKey, "photoUrl", publicUrl)
+      setResponses((prev) => {
+        const currentItem = prev[itemKey] || {
+          status: "NO",
+          observation: "",
+          responsible: "",
+          photos: [],
+        }
+        const currentPhotos = currentItem.photos || []
+        
+        return {
+          ...prev,
+          [itemKey]: {
+            ...currentItem,
+            photos: [...currentPhotos, publicUrl]
+          }
+        }
+      })
       
       toast({
         title: "Foto enviada",
@@ -83,13 +99,19 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
     }
   }
 
-  const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string) => {
+  const removePhoto = (itemKey: string, photoUrl: string) => {
+    const currentPhotos = responses[itemKey]?.photos || []
+    const newPhotos = currentPhotos.filter(p => p !== photoUrl)
+    handleItemChange(itemKey, "photos", newPhotos)
+  }
+
+  const handleItemChange = (itemKey: string, field: keyof ItemResponse, value: string | string[]) => {
     setResponses((prev) => {
       const currentItem = prev[itemKey] || {
         status: "NO",
         observation: "",
         responsible: "",
-        photoUrl: "",
+        photos: [],
       }
 
       return {
@@ -173,7 +195,7 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
         sector.checklist.flatMap((section) =>
           section.items.map((item) => {
             const key = `${sector.id}-${section.title}-${item.item}`
-            const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrl: "" }
+            const response = responses[key] || { status: "NO", observation: "", responsible: "", photos: [] }
 
             return {
               inspection_id: inspection.id,
@@ -183,7 +205,7 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
               points: item.points,
               observation: response.observation,
               responsible: response.responsible,
-              photo_url: response.photoUrl,
+              photos: response.photos,
             }
           }),
         ),
@@ -343,38 +365,59 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                           </div>
                         </RadioGroup>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex flex-wrap gap-2 justify-end">
+                            {response.photos && response.photos.map((photo, idx) => (
+                              <div key={idx} className="relative group">
+                                <img src={photo} alt="Foto" className="h-12 w-12 object-cover rounded-md border" />
+                                <button
+                                  type="button"
+                                  onClick={() => removePhoto(key, photo)}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-sm"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2">
                            <input
                             type="file"
                             accept="image/*"
                             capture="environment"
                             className="hidden"
-                            id={`photo-${key}`}
+                            id={`photo-${key.replace(/\s+/g, '-')}`}
                             onChange={(e) => {
                               const file = e.target.files?.[0]
-                              if (file) handlePhotoUpload(key, file)
+                              if (file) {
+                                handlePhotoUpload(key, file)
+                                e.target.value = ""
+                              }
                             }}
                             disabled={uploadingPhoto === key}
                           />
-                          <Label
-                            htmlFor={`photo-${key}`}
-                            className={`cursor-pointer p-2 rounded-md hover:bg-slate-100 ${
-                              response.photoUrl ? "text-green-600 bg-green-50" : "text-slate-500"
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={`p-2 h-auto rounded-md hover:bg-slate-100 ${
+                              response.photos && response.photos.length > 0 ? "text-blue-600 bg-blue-50" : "text-slate-500"
                             }`}
-                            title={response.photoUrl ? "Foto anexada (clique para alterar)" : "Anexar foto"}
+                            title="Anexar foto"
                             onClick={(e) => {
-                              // Evitar que o clique no label propague e cause submissão acidental
+                              e.preventDefault()
                               e.stopPropagation()
+                              const input = document.getElementById(`photo-${key.replace(/\s+/g, '-')}`)
+                              if (input) input.click()
                             }}
                           >
                             {uploadingPhoto === key ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : response.photoUrl ? (
-                              <ImageIcon className="h-5 w-5" />
                             ) : (
                               <Camera className="h-5 w-5" />
                             )}
-                          </Label>
+                          </Button>
+                          </div>
                         </div>
                       </div>
 

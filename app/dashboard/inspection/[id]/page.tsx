@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { ArrowLeft, Edit } from "lucide-react"
 import ExportPDFButton from "@/components/export-pdf-button"
+import DeleteInspectionButton from "@/components/delete-inspection-button"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -166,7 +167,7 @@ export default async function InspectionDetailPage({ params }: Props) {
                 </Card>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <ExportPDFButton inspection={inspectionWithUser} items={items || []} />
                 <Button variant="outline" asChild>
                   <Link href={`/dashboard/inspection/${id}/edit`}>
@@ -174,6 +175,7 @@ export default async function InspectionDetailPage({ params }: Props) {
                     Editar Vistoria
                   </Link>
                 </Button>
+                <DeleteInspectionButton inspectionId={id} />
               </div>
             </CardContent>
           </Card>
@@ -214,6 +216,32 @@ export default async function InspectionDetailPage({ params }: Props) {
                             <p className="text-sm">
                               <span className="font-medium">Responsável:</span> {item.responsible}
                             </p>
+                          </div>
+                        )}
+                        {((item.photos && item.photos.length > 0) || item.photo_url) && (
+                          <div className="mt-3">
+                            <p className="text-sm font-medium mb-2">Fotos:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {item.photos && item.photos.length > 0 ? (
+                                item.photos.map((photo: string, idx: number) => (
+                                  <a key={idx} href={photo} target="_blank" rel="noopener noreferrer">
+                                    <img
+                                      src={photo}
+                                      alt={`Foto ${idx + 1}`}
+                                      className="h-20 w-20 rounded-md border object-cover"
+                                    />
+                                  </a>
+                                ))
+                              ) : item.photo_url ? (
+                                <a href={item.photo_url} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={item.photo_url}
+                                    alt="Foto"
+                                    className="h-20 w-20 rounded-md border object-cover"
+                                  />
+                                </a>
+                              ) : null}
+                            </div>
                           </div>
                         )}
                       </div>

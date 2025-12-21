@@ -296,24 +296,43 @@ export default async function PrintInspectionPage({ params }: { params: Promise<
                   </div>
                   <span className={`status-badge status-${item.status.toLowerCase()}`}>{item.status}</span>
                 </div>
-                {(item.observation || item.responsible || item.photo_url) && (
+                {(item.observation || item.responsible || (item.photos && item.photos.length > 0) || item.photo_url) && (
                   <div className="item-details">
                     {item.observation && <div><strong>Observação:</strong> {item.observation}</div>}
                     {item.responsible && <div style={{ marginTop: '5px' }}><strong>Responsável:</strong> {item.responsible}</div>}
-                    {item.photo_url && (
+                    {((item.photos && item.photos.length > 0) || item.photo_url) && (
                       <div style={{ marginTop: '10px' }}>
-                        <strong>Foto:</strong><br/>
-                        <img 
-                          src={item.photo_url} 
-                          alt="Foto da vistoria"
-                          style={{ 
-                            maxWidth: '200px', 
-                            maxHeight: '200px', 
-                            marginTop: '5px', 
-                            borderRadius: '4px', 
-                            border: '1px solid #ddd' 
-                          }} 
-                        />
+                        <strong>Fotos:</strong><br/>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '5px' }}>
+                          {item.photos && item.photos.length > 0 ? (
+                            item.photos.map((photo: string, idx: number) => (
+                              <img 
+                                key={idx}
+                                src={photo} 
+                                alt={`Foto ${idx + 1}`}
+                                style={{ 
+                                  maxWidth: '200px', 
+                                  maxHeight: '200px', 
+                                  borderRadius: '4px', 
+                                  border: '1px solid #ddd',
+                                  objectFit: 'cover'
+                                }} 
+                              />
+                            ))
+                          ) : item.photo_url ? (
+                             <img 
+                              src={item.photo_url} 
+                              alt="Foto da vistoria"
+                              style={{ 
+                                maxWidth: '200px', 
+                                maxHeight: '200px', 
+                                borderRadius: '4px', 
+                                border: '1px solid #ddd',
+                                objectFit: 'cover'
+                              }} 
+                            />
+                          ) : null}
+                        </div>
                       </div>
                     )}
                   </div>
