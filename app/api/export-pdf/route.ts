@@ -9,14 +9,31 @@ export async function POST(request: Request) {
     // Tentar ler a logo e converter para base64
     let logoSrc = `${origin}/logo.png`
     try {
+      // Tentativa 1: Sistema de arquivos local (funciona localmente)
       const logoPath = path.join(process.cwd(), "public", "logo.png")
       if (fs.existsSync(logoPath)) {
         const logoBuffer = fs.readFileSync(logoPath)
         const base64Logo = logoBuffer.toString("base64")
         logoSrc = `data:image/png;base64,${base64Logo}`
+      } else {
+        // Tentativa 2: Fetch da URL pública (funciona na Vercel se o arquivo não estiver no disco local da function)
+        // Adicionamos um timeout para não travar se a rede estiver lenta
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
+        
+        const response = await fetch(`${origin}/logo.png`, { signal: controller.signal })
+        clearTimeout(timeoutId)
+
+        if (response.ok) {
+          const arrayBuffer = await response.arrayBuffer()
+          const buffer = Buffer.from(arrayBuffer)
+          const base64Logo = buffer.toString("base64")
+          logoSrc = `data:image/png;base64,${base64Logo}`
+        }
       }
     } catch (e) {
-      console.error("Erro ao ler logo local:", e)
+      console.error("Erro ao processar logo:", e)
+      // Mantém a URL original como fallback
     }
 
     // Agrupar itens por categoria
