@@ -39,7 +39,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -49,8 +49,16 @@ export default function SignUpPage() {
           },
         },
       })
+      
       if (error) throw error
-      router.push("/auth/check-email")
+
+      // Se o Supabase retornar uma sessão, o email já foi confirmado (ou verificação está desligada)
+      if (data.session) {
+        router.push("/dashboard")
+      } else {
+        // Se não tem sessão, precisa verificar o email
+        router.push("/auth/check-email")
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Erro ao criar conta")
     } finally {
