@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/auth-utils"
 
 export async function POST(request: NextRequest) {
@@ -14,10 +15,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email e senha são obrigatórios" }, { status: 400 })
     }
 
-    const supabase = await createServerClient()
+    // Usar cliente admin para criar usuário (Service Role)
+    const supabaseAdmin = createAdminClient()
 
     // Criar usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -28,8 +30,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Atualizar perfil com role e franchise
-    const { error: profileError } = await supabase
-      .from("profiles")
+    // Usamos o admin client aqui também para garantir permissão de escrita na tabela users/profiles se necessário
+    const { error: profileError } = await supabaseAdmin
+      .from("users") // ou profiles, dependendo de como está sua tabela
       .update({
         role: role || "user",
         franchise_id: franchise_id || null,
