@@ -75,42 +75,52 @@ export default function InspectionEditForm({ inspection, items, franchises, user
   )
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
 
-  const handlePhotoUpload = async (itemId: string, file: File) => {
+  const handlePhotoUpload = async (itemId: string, files: FileList) => {
     try {
       setUploadingPhoto(itemId)
       const supabase = createClient()
       
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${franchiseId}/${inspectionDate}/${fileName}`
+      const newPhotos: string[] = []
 
-      const { error: uploadError } = await supabase.storage
-        .from('inspection-photos')
-        .upload(filePath, file)
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Math.random()}.${fileExt}`
+        const filePath = `${franchiseId}/${inspectionDate}/${fileName}`
 
-      if (uploadError) {
-        throw uploadError
+        const { error: uploadError } = await supabase.storage
+          .from('inspection-photos')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          console.error(`Erro ao enviar foto ${file.name}:`, uploadError)
+          continue
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('inspection-photos')
+          .getPublicUrl(filePath)
+        
+        newPhotos.push(publicUrl)
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('inspection-photos')
-        .getPublicUrl(filePath)
-
-      setResponses((prev) => {
-        const currentPhotos = prev[itemId]?.photos || []
-        return {
-          ...prev,
-          [itemId]: {
-            ...prev[itemId],
-            photos: [...currentPhotos, publicUrl],
-          },
-        }
-      })
-      
-      toast({
-        title: "Foto enviada",
-        description: "A foto foi anexada com sucesso.",
-      })
+      if (newPhotos.length > 0) {
+        setResponses((prev) => {
+          const currentPhotos = prev[itemId]?.photos || []
+          return {
+            ...prev,
+            [itemId]: {
+              ...prev[itemId],
+              photos: [...currentPhotos, ...newPhotos],
+            },
+          }
+        })
+        
+        toast({
+          title: "Fotos enviadas",
+          description: `${newPhotos.length} foto(s) anexada(s) com sucesso.`,
+        })
+      }
     } catch (error) {
       console.error("Erro ao enviar foto:", error)
       toast({
@@ -369,13 +379,12 @@ export default function InspectionEditForm({ inspection, items, franchises, user
                        <input
                         type="file"
                         accept="image/*"
-                        capture="environment"
+                        multiple
                         className="hidden"
                         id={`photo-${item.id}`}
                         onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            handlePhotoUpload(item.id, file)
+                          if (e.target.files && e.target.files.length > 0) {
+                            handlePhotoUpload(item.id, e.target.files)
                             e.target.value = ""
                           }
                         }}

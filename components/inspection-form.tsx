@@ -44,49 +44,59 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
 
-  const handlePhotoUpload = async (itemKey: string, file: File) => {
+  const handlePhotoUpload = async (itemKey: string, files: FileList) => {
     try {
       setUploadingPhoto(itemKey)
       const supabase = createClient()
       
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${franchiseId}/${inspectionDate}/${fileName}`
+      const newPhotos: string[] = []
 
-      const { error: uploadError } = await supabase.storage
-        .from('inspection-photos')
-        .upload(filePath, file)
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Math.random()}.${fileExt}`
+        const filePath = `${franchiseId}/${inspectionDate}/${fileName}`
 
-      if (uploadError) {
-        throw uploadError
+        const { error: uploadError } = await supabase.storage
+          .from('inspection-photos')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          console.error(`Erro ao enviar foto ${file.name}:`, uploadError)
+          continue
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('inspection-photos')
+          .getPublicUrl(filePath)
+        
+        newPhotos.push(publicUrl)
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('inspection-photos')
-        .getPublicUrl(filePath)
-
-      setResponses((prev) => {
-        const currentItem = prev[itemKey] || {
-          status: "NO",
-          observation: "",
-          responsible: "",
-          photos: [],
-        }
-        const currentPhotos = currentItem.photos || []
-        
-        return {
-          ...prev,
-          [itemKey]: {
-            ...currentItem,
-            photos: [...currentPhotos, publicUrl]
+      if (newPhotos.length > 0) {
+        setResponses((prev) => {
+          const currentItem = prev[itemKey] || {
+            status: "NO",
+            observation: "",
+            responsible: "",
+            photos: [],
           }
-        }
-      })
-      
-      toast({
-        title: "Foto enviada",
-        description: "A foto foi anexada com sucesso.",
-      })
+          const currentPhotos = currentItem.photos || []
+          
+          return {
+            ...prev,
+            [itemKey]: {
+              ...currentItem,
+              photos: [...currentPhotos, ...newPhotos]
+            }
+          }
+        })
+        
+        toast({
+          title: "Fotos enviadas",
+          description: `${newPhotos.length} foto(s) anexada(s) com sucesso.`,
+        })
+      }
     } catch (error) {
       console.error("Erro ao enviar foto:", error)
       toast({
@@ -384,13 +394,12 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                            <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
+                            multiple
                             className="hidden"
                             id={`photo-${key.replace(/\s+/g, '-')}`}
                             onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                handlePhotoUpload(key, file)
+                              if (e.target.files && e.target.files.length > 0) {
+                                handlePhotoUpload(key, e.target.files)
                                 e.target.value = ""
                               }
                             }}

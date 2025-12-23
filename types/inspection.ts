@@ -9,6 +9,7 @@ export type ChecklistItemResponse = {
   observation?: string
   responsible?: string
   photo_url?: string
+  photos?: string[]
 }
 
 export type InspectionFormData = {
