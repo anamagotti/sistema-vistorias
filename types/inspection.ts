@@ -17,6 +17,8 @@ export type InspectionFormData = {
   inspection_date: string
   sector: string
   items: ChecklistItemResponse[]
+  franchisee_signature_url?: string
+  inspector_signature_url?: string
 }
 
 export type Franchise = {

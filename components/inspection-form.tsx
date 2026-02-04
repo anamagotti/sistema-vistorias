@@ -17,6 +17,20 @@ import type { Franchise } from "@/types/inspection"
 import { ArrowLeft, Save, Camera, Loader2, Image as ImageIcon, X } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import SignaturePad from "@/components/signature-pad"
+
+// Helper convert dataURL to Blob
+function dataURLtoBlob(dataurl: string) {
+  const arr = dataurl.split(',')
+  const mime = arr[0].match(/:(.*?);/)![1]
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new Blob([u8arr], { type: mime })
+}
 
 type Props = {
   userId: string
@@ -43,6 +57,9 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
   const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().split("T")[0])
   const [responses, setResponses] = useState<Record<string, ItemResponse>>({})
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+  
+  const [franchiseeSignature, setFranchiseeSignature] = useState<string | null>(null)
+  const [inspectorSignature, setInspectorSignature] = useState<string | null>(null)
 
   const handlePhotoUpload = async (itemKey: string, files: FileList) => {
     try {
@@ -174,6 +191,40 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
     setIsSubmitting(true)
 
     try {
+      const supabase = createClient()
+      let franchiseeSignatureUrl: string | undefined
+      let inspectorSignatureUrl: string | undefined
+
+      if (franchiseeSignature) {
+        const blob = dataURLtoBlob(franchiseeSignature)
+        const fileName = `signatures/${franchiseId}/${Date.now()}_franchisee.png`
+        const { error } = await supabase.storage
+          .from('inspection-photos')
+          .upload(fileName, blob)
+        
+        if (!error) {
+          const { data } = supabase.storage
+            .from('inspection-photos')
+            .getPublicUrl(fileName)
+          franchiseeSignatureUrl = data.publicUrl
+        }
+      }
+
+      if (inspectorSignature) {
+        const blob = dataURLtoBlob(inspectorSignature)
+        const fileName = `signatures/${franchiseId}/${Date.now()}_inspector.png`
+        const { error } = await supabase.storage
+          .from('inspection-photos')
+          .upload(fileName, blob)
+         
+        if (!error) {
+          const { data } = supabase.storage
+            .from('inspection-photos')
+            .getPublicUrl(fileName)
+          inspectorSignatureUrl = data.publicUrl
+        }
+      }
+
       const score = calculateScore()
       const rating = calculateRating(score.percentage)
 
@@ -190,6 +241,8 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
           points_achieved: score.achieved,
           percentage: score.percentage,
           rating,
+          franchisee_signature_url: franchiseeSignatureUrl,
+          inspector_signature_url: inspectorSignatureUrl,
         }),
       })
 
@@ -465,6 +518,23 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
           ))}
         </div>
       ))}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Assinaturas</CardTitle>
+          <CardDescription>Assine abaixo para validar a vistoria</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-2">
+            <SignaturePad 
+                label="Assinatura do Proprietário/Responsável" 
+                onChange={setFranchiseeSignature} 
+            />
+            <SignaturePad 
+                label="Assinatura do Vistoriador" 
+                onChange={setInspectorSignature} 
+            />
+        </CardContent>
+      </Card>
 
       <div className="flex gap-4">
         <Button type="button" variant="outline" asChild>

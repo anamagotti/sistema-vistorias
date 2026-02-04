@@ -343,6 +343,31 @@ export default async function PrintInspectionPage({ params }: { params: Promise<
         </div>
       ))}
 
+      <div className="signatures-section" style={{ marginTop: '50px', pageBreakInside: 'avoid' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {inspection.franchisee_signature_url ? (
+                      <img src={inspection.franchisee_signature_url} alt="Assinatura Proprietário" style={{ maxHeight: '100px', maxWidth: '100%', marginBottom: '5px', objectFit: 'contain' }} />
+                  ) : (
+                      <div style={{ height: '100px', width: '100%', marginBottom: '5px' }}></div>
+                  )}
+                  <div style={{ borderTop: '1px solid #333', width: '100%', textAlign: 'center', paddingTop: '5px', fontSize: '12px' }}>
+                      Assinatura Proprietário/Responsável
+                  </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {inspection.inspector_signature_url ? (
+                      <img src={inspection.inspector_signature_url} alt="Assinatura Vistoriador" style={{ maxHeight: '100px', maxWidth: '100%', marginBottom: '5px', objectFit: 'contain' }} />
+                  ) : (
+                      <div style={{ height: '100px', width: '100%', marginBottom: '5px' }}></div>
+                  )}
+                  <div style={{ borderTop: '1px solid #333', width: '100%', textAlign: 'center', paddingTop: '5px', fontSize: '12px' }}>
+                        Assinatura Vistoriador
+                  </div>
+              </div>
+          </div>
+      </div>
+
       <div className="footer">
         <p>Relatório gerado em {new Date().toLocaleDateString("pt-BR")} às {new Date().toLocaleTimeString("pt-BR")}</p>
         <p>Bar do Português - Sistema de Vistorias Automatizado</p>
