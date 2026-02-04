@@ -400,7 +400,7 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
               <CardContent className="space-y-6">
                 {section.items.map((item, itemIdx) => {
                   const key = `${sector.id}-${section.title}-${item.item}`
-                  const response = responses[key] || { status: "NO", observation: "", responsible: "", photoUrl: "" }
+                  const response = responses[key] || { status: "NO", observation: "", responsible: "", photos: [] }
 
                   return (
                     <div key={itemIdx} className="space-y-3 rounded-lg border p-4">
@@ -483,7 +483,6 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                         </div>
                       </div>
 
-                      {response.status === "NO" && (
                         <div className="grid gap-3 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label htmlFor={`${key}-obs`} className="text-sm">
@@ -493,7 +492,7 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                               id={`${key}-obs`}
                               value={response.observation}
                               onChange={(e) => handleItemChange(key, "observation", e.target.value)}
-                              placeholder="Descreva o problema..."
+                              placeholder="Observação (opcional)"
                               rows={2}
                             />
                           </div>
@@ -509,7 +508,6 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                             />
                           </div>
                         </div>
-                      )}
                     </div>
                   )
                 })}
