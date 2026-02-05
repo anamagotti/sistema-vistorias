@@ -164,8 +164,13 @@ export default function InspectionEditForm({ inspection, items, franchises, user
 
     items.forEach((item) => {
       totalPoints += item.points
-      if (responses[item.id]?.status === "OK") {
-        achievedPoints += item.points
+      const response = responses[item.id]
+      if (response?.status === "OK") {
+        if (response.observation && response.observation.trim().length > 0) {
+          achievedPoints += item.points / 2
+        } else {
+          achievedPoints += item.points
+        }
       }
     })
 

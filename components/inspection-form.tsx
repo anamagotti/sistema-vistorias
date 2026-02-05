@@ -165,8 +165,14 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
 
           // Se não tiver resposta, assume NO (ou poderia assumir OK, mas vamos ser estritos)
           // Se a resposta for OK, soma pontos
-          if (responses[key]?.status === "OK") {
-            achievedPoints += item.points
+          const response = responses[key]
+          if (response?.status === "OK") {
+            // Se tiver observação, conta apenas metade dos pontos
+            if (response.observation && response.observation.trim().length > 0) {
+              achievedPoints += item.points / 2
+            } else {
+              achievedPoints += item.points
+            }
           }
         })
       })
