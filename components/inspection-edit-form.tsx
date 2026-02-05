@@ -48,6 +48,7 @@ type ItemResponse = {
   observation: string
   responsible: string
   photos: string[]
+  item_name: string
 }
 
 export default function InspectionEditForm({ inspection, items, franchises, users, userId }: Props) {
@@ -67,6 +68,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
           observation: item.observation || "",
           responsible: item.responsible || "",
           photos: item.photos || (item.photo_url ? [item.photo_url] : []),
+          item_name: item.item_name,
         }
         return acc
       },
@@ -207,6 +209,7 @@ export default function InspectionEditForm({ inspection, items, franchises, user
             observation: response.observation,
             responsible: response.responsible,
             photos: response.photos,
+            item_name: response.item_name,
           }),
         }),
       )
@@ -338,7 +341,11 @@ export default function InspectionEditForm({ inspection, items, franchises, user
                 <div key={item.id} className="space-y-3 rounded-lg border p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="font-medium">{item.item_name}</p>
+                      <Input 
+                        value={response.item_name} 
+                        onChange={(e) => handleItemChange(item.id, "item_name", e.target.value)}
+                        className="font-medium mb-1 h-auto py-2"
+                      />
                       <p className="text-sm text-muted-foreground">{item.points} pontos</p>
                     </div>
                     <RadioGroup

@@ -44,6 +44,7 @@ type ItemResponse = {
   observation: string
   responsible: string
   photos: string[]
+  item_name?: string
 }
 
 export default function InspectionForm({ userId, franchises, users, defaultFranchiseId }: Props) {
@@ -263,7 +264,7 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
             return {
               inspection_id: inspection.id,
               category: `${sector.name} - ${section.title}`, // Incluir nome do setor na categoria
-              item_name: item.item,
+              item_name: response.item_name || item.item,
               status: response.status,
               points: item.points,
               observation: response.observation,
@@ -406,7 +407,11 @@ export default function InspectionForm({ userId, franchises, users, defaultFranc
                     <div key={itemIdx} className="space-y-3 rounded-lg border p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <p className="font-medium">{item.item}</p>
+                          <Input 
+                            value={response.item_name !== undefined ? response.item_name : item.item} 
+                            onChange={(e) => handleItemChange(key, "item_name", e.target.value)}
+                            className="font-medium mb-1 h-auto py-2"
+                          />
                           <p className="text-sm text-muted-foreground">{item.points} pontos</p>
                         </div>
                         <RadioGroup
